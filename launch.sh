@@ -3,21 +3,21 @@
 # Abort on any error
 set -e
 
-# Store root directory for returning back
+# Save root directory so we always return
 ROOT_DIR="$(pwd)"
 
-# Handle exit
+# Cleanup function to stop both processes
 cleanup() {
     echo ""
     echo "⚠️  Stopping all processes..."
 
-    # Kill Backend if running
+    # Stop backend
     if [ -n "$BACKEND_PID" ] && kill -0 "$BACKEND_PID" 2>/dev/null; then
         echo "Stopping Backend (PID: $BACKEND_PID)..."
         kill "$BACKEND_PID" 2>/dev/null
     fi
 
-    # Kill Frontend if running
+    # Stop frontend
     if [ -n "$FRONTEND_PID" ] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
         echo "Stopping Frontend (PID: $FRONTEND_PID)..."
         kill "$FRONTEND_PID" 2>/dev/null
@@ -27,42 +27,61 @@ cleanup() {
     exit 0
 }
 
-# Trap common exit signals
+# Trap exit signals
 trap cleanup SIGINT SIGTERM
 
 echo "🚀 Starting SecureCourse..."
 
-# ---------------- BACKEND ----------------
+######################################
+#            BACKEND START
+######################################
 echo "➡️  Starting Backend..."
 cd "$ROOT_DIR/backend"
 
-if [ ! -x "./mvnw" ]; then
-    echo "Making mvnw executable..."
+# Use mvnw if available, else use system mvn
+if [ -f "./mvnw" ]; then
+    echo "Using ./mvnw"
     chmod +x mvnw
+    ./mvnw spring-boot:run &
+else
+    echo "Using system mvn"
+    mvn spring-boot:run &
 fi
 
-./mvnw spring-boot:run &
 BACKEND_PID=$!
-
-cd "$ROOT_DIR"
 echo "Backend PID: $BACKEND_PID"
 
+cd "$ROOT_DIR"
 
-# ---------------- FRONTEND ----------------
+######################################
+#            FRONTEND START
+######################################
 echo "➡️  Starting Frontend..."
 cd "$ROOT_DIR/frontend"
 
+# Install dependencies if node_modules missing
+if [ ! -d "node_modules" ]; then
+    echo "📦 node_modules not found. Running npm install..."
+    npm install
+fi
+
 npm run dev &
 FRONTEND_PID=$!
-
-cd "$ROOT_DIR"
 echo "Frontend PID: $FRONTEND_PID"
 
+cd "$ROOT_DIR"
+
+######################################
+#               DONE
+######################################
 echo ""
 echo "✨ Application started successfully!"
-echo "Press Ctrl+C to stop everything."
+echo "➡️  Backend running at: http://localhost:8080"
+echo "➡️  Frontend running at: http://localhost:5173 (or printed by Vite)"
+echo ""
+echo "Press Ctrl+C to stop both."
 echo ""
 
-# Wait until both exit
+# Wait for both processes
 wait $BACKEND_PID $FRONTEND_PID
 cleanup
