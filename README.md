@@ -6,7 +6,29 @@
 
 SecureCourse is a full-stack web application designed to teach developers about common web security vulnerabilities in a safe, controlled environment. It features a unique **Security Toggle System** that allows real-time switching between secure and vulnerable code paths.
 
+
 ## ⚡ Quick Start
+
+There are two ways to start the application:
+
+### **Way 1: Run Using Launch Script**
+A pre-configured launch script allows you to start both the backend and frontend together.
+
+To run the project automatically, simply execute the following command in your terminal:
+
+```bash
+bash launch.sh
+```
+
+This automatically:
+- Starts the backend  
+- Starts the frontend  
+- Installs dependencies if missing  
+- Cleans up processes on exit  
+
+---
+
+### **Way 2: Manual Startup**
 
 ### Prerequisites
 - Java 17+
